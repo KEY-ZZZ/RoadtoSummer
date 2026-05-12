@@ -2,7 +2,12 @@ import logging
 from telegram.ext import ApplicationBuilder, CommandHandler
 from config import TELEGRAM_TOKEN
 from storage import init_db
-from handlers import build_conversation_handler, start, cancel
+from handlers import (
+    build_onboarding_handler,
+    build_workout_handler,
+    build_feedback_handler,
+    cancel,
+)
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -15,9 +20,10 @@ def main():
 
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
+    app.add_handler(build_onboarding_handler())
+    app.add_handler(build_workout_handler())
+    app.add_handler(build_feedback_handler())
     app.add_handler(CommandHandler("cancel", cancel))
-    app.add_handler(build_conversation_handler())
 
     logging.info("Bot started")
     app.run_polling(drop_pending_updates=True)

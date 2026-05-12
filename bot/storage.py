@@ -46,6 +46,14 @@ def init_db():
         """)
 
 
+def save_user_profile(telegram_id: int, profile: dict):
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE users SET profile_json = ? WHERE telegram_id = ?",
+            (json.dumps(profile), telegram_id),
+        )
+
+
 def get_or_create_user(telegram_id: int, username: str) -> dict:
     with get_conn() as conn:
         row = conn.execute(
