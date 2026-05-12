@@ -11,6 +11,7 @@ with open(MATCHING_LOGIC_PATH, encoding="utf-8") as f:
     _matching_logic = json.load(f)
 
 _ALL_EXERCISES = _library["exercises"]
+_EXERCISE_LOOKUP = {ex["exercise_id"]: ex for ex in _ALL_EXERCISES}
 
 TARGET_MAP = {
     "upper": ["chest", "back", "shoulders", "biceps", "triceps"],
@@ -32,7 +33,6 @@ CONTRAINDICATED_MAP = {
 
 
 def _filter_exercises(location: str, home_equipment: list, injuries: list) -> list:
-    """Return exercises available given user location and equipment."""
     equip_set = set(home_equipment)
 
     def available(ex: dict) -> bool:
@@ -40,8 +40,7 @@ def _filter_exercises(location: str, home_equipment: list, injuries: list) -> li
         if location not in scenes:
             return False
         required = set(ex["execution"].get("equipment", []))
-        bodyweight_only = required <= {"bodyweight", "mat"}
-        if bodyweight_only:
+        if required <= {"bodyweight", "mat"}:
             return True
         if location == "gym":
             return True
@@ -49,7 +48,6 @@ def _filter_exercises(location: str, home_equipment: list, injuries: list) -> li
             return bool(required & (equip_set | {"bodyweight", "mat"}))
         return False
 
-    # Hard-filter contraindicated exercises
     injury_flags = set()
     for injury in injuries:
         injury_flags.update(CONTRAINDICATED_MAP.get(injury, []))
@@ -78,7 +76,7 @@ _SYSTEM_TEMPLATE = """你是一名专业健身教练AI。根据用户当前状�
     "contraindicated": [],
     "duration_min": 20,
     "exercise_style": ["stretching", "activation"],
-    "reasoning_summary": "中文说明为何这样安排（2句）"
+    "reasoning_summary": "今天精力一般，给你安排些轻松的动作，主要活动一下背部和肩膀，不会太累。"
   }},
   "plan": [
     {{
@@ -97,6 +95,7 @@ _SYSTEM_TEMPLATE = """你是一名专业健身教练AI。根据用户当前状�
 - 动作顺序：热身激活 → 主体训练 → 拉伸放松
 - 总时长控制在 duration_min ± 5 分钟
 - 如有历史数据，近期出现的动作降优先级
+- reasoning_summary 必须用大白话，像朋友跟你说话一样，不超过两句，不用专业术语
 """
 
 
@@ -130,7 +129,6 @@ def generate_plan(pre_survey: dict, user_memory: dict, profile: dict = None) -> 
         "motivated": "很有动力，可以安排力量类动作",
     }
     mental_hint = mental_map.get(pre_survey.get("mental", "neutral"), "")
-
     sore_desc = "、".join(pre_survey.get("sore_parts", [])) or "无"
 
     exp_hint = ""
@@ -162,8 +160,15 @@ def generate_plan(pre_survey: dict, user_memory: dict, profile: dict = None) -> 
 
     result = json.loads(raw)
 
-    # Verify all exercise_ids are valid
     valid_ids = {ex["exercise_id"] for ex in available}
     result["plan"] = [ex for ex in result["plan"] if ex.get("exercise_id") in valid_ids]
+
+    # Enrich plan items with library data for display
+    for item in result["plan"]:
+        lib = _EXERCISE_LOOKUP.get(item.get("exercise_id"), {})
+        item["exercise_style"] = lib.get("matching_tags", {}).get("exercise_style", [])
+        item["instructions"] = lib.get("instructions", "")
+        item["cues"] = lib.get("cues", [])
+        item["difficulty"] = lib.get("difficulty", "")
 
     return result

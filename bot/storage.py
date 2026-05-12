@@ -54,6 +54,23 @@ def save_user_profile(telegram_id: int, profile: dict):
         )
 
 
+def update_user_profile_field(telegram_id: int, key: str, value):
+    data = get_or_create_user(telegram_id, "")
+    profile = data.get("profile", {})
+    profile[key] = value
+    save_user_profile(telegram_id, profile)
+
+
+def get_session_plan(session_id: int) -> list:
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT plan_json FROM sessions WHERE id = ?", (session_id,)
+        ).fetchone()
+    if row is None:
+        return []
+    return json.loads(row["plan_json"])
+
+
 def get_or_create_user(telegram_id: int, username: str) -> dict:
     with get_conn() as conn:
         row = conn.execute(

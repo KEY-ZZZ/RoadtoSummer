@@ -11,9 +11,10 @@ from telegram.ext import (
 from ai_coach import generate_plan
 from storage import (
     get_or_create_user, save_session, save_feedback,
-    get_user_memory, save_user_profile,
+    get_user_memory, save_user_profile, update_user_profile_field,
+    get_session_plan,
 )
-from formatter import format_plan, format_summary
+from formatter import format_plan, format_exercise_details, format_summary
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,11 @@ ASK_ENERGY, ASK_TIME, ASK_LOCATION, ASK_HOME_EQUIP, ASK_MENTAL, ASK_BODY, ASK_TA
 # ─── Feedback states ──────────────────────────────────────────────────────────
 FB_BODY, FB_MOOD = range(20, 22)
 
+# ─── Profile edit state ───────────────────────────────────────────────────────
+PROFILE_EDIT_EQUIP = 30
 
-# ─── Keyboards ────────────────────────────────────────────────────────────────
+
+# ─── Static keyboards ─────────────────────────────────────────────────────────
 
 ENERGY_KB = InlineKeyboardMarkup([
     [
@@ -68,7 +72,7 @@ HOME_EQUIP_KB = InlineKeyboardMarkup([
     [InlineKeyboardButton("❌ 没有器械（纯徒手）", callback_data="equip_none")],
     [InlineKeyboardButton("🏋 有哑铃", callback_data="equip_dumbbell")],
     [InlineKeyboardButton("🎗 有弹力带", callback_data="equip_band")],
-    [InlineKeyboardButton("🏋🎗 哑铃+弹力带都有", callback_data="equip_both")],
+    [InlineKeyboardButton("🏋🎗 哑铃 + 弹力带都有", callback_data="equip_both")],
 ])
 
 MENTAL_KB = InlineKeyboardMarkup([
@@ -137,6 +141,26 @@ FEEDBACK_MOOD_KB = InlineKeyboardMarkup([
     ],
 ])
 
+EQUIP_LABELS = {
+    "none": "没有器械",
+    "dumbbell": "哑铃",
+    "band": "弹力带",
+    "both": "哑铃 + 弹力带",
+}
+
+EQUIP_DATA = {
+    "none": [],
+    "dumbbell": ["dumbbell"],
+    "band": ["resistance_band"],
+    "both": ["dumbbell", "resistance_band"],
+}
+
+EXPERIENCE_LABELS = {
+    "beginner": "新手（< 6 个月）",
+    "intermediate": "有基础（6 个月 ~ 2 年）",
+    "advanced": "老手（> 2 年）",
+}
+
 
 def _build_body_kb(selected: set) -> InlineKeyboardMarkup:
     rows = []
@@ -149,9 +173,8 @@ def _build_body_kb(selected: set) -> InlineKeyboardMarkup:
             row = []
     if row:
         rows.append(row)
-    rows.append([
-        InlineKeyboardButton("✓ 没有不适，继续", callback_data="body_done"),
-    ])
+    confirm_label = f"✓ 已选 {len(selected)} 个，继续 →" if selected else "✓ 没有不适，继续 →"
+    rows.append([InlineKeyboardButton(confirm_label, callback_data="body_done")])
     return InlineKeyboardMarkup(rows)
 
 
@@ -166,7 +189,8 @@ def _build_injury_kb(selected: set) -> InlineKeyboardMarkup:
             row = []
     if row:
         rows.append(row)
-    rows.append([InlineKeyboardButton("✓ 无伤病，完成", callback_data="inj_done")])
+    confirm_label = f"✓ 已选 {len(selected)} 个，完成" if selected else "✓ 无伤病，完成"
+    rows.append([InlineKeyboardButton(confirm_label, callback_data="inj_done")])
     return InlineKeyboardMarkup(rows)
 
 
@@ -190,7 +214,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             f"欢迎回来 {user.first_name}！🔥\n\n"
             f"已记录 {history_count} 次训练。\n\n"
-            "发送 /workout 开始今天的训练 💪"
+            "发送 /workout 开始今天的训练 💪\n"
+            "发送 /profile 查看或修改你的档案"
         )
         return ConversationHandler.END
 
@@ -198,9 +223,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def ob_got_experience(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    level = query.data.split("_")[1]
-    context.user_data["ob_experience"] = level
-
+    context.user_data["ob_experience"] = query.data.split("_")[1]
     context.user_data["ob_injuries"] = set()
     await query.edit_message_text(
         "有没有需要避开的伤病或不适部位？（可多选，选完按确认）",
@@ -225,18 +248,7 @@ async def ob_toggle_injury(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def ob_injuries_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
-    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-    home_equip_kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton("❌ 没有器械", callback_data="ob_equip_none")],
-        [InlineKeyboardButton("🏋 有哑铃", callback_data="ob_equip_dumbbell")],
-        [InlineKeyboardButton("🎗 有弹力带", callback_data="ob_equip_band")],
-        [InlineKeyboardButton("🏋🎗 都有", callback_data="ob_equip_both")],
-    ])
-    await query.edit_message_text(
-        "家里有什么训练器械？",
-        reply_markup=home_equip_kb,
-    )
+    await query.edit_message_text("家里有什么训练器械？", reply_markup=HOME_EQUIP_KB)
     return OB_EQUIPMENT
 
 
@@ -244,27 +256,59 @@ async def ob_got_equipment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     equip_key = query.data[8:]
-
-    equip_map = {
-        "none": [],
-        "dumbbell": ["dumbbell"],
-        "band": ["resistance_band"],
-        "both": ["dumbbell", "resistance_band"],
-    }
-    equipment = equip_map.get(equip_key, [])
-
     profile = {
         "experience_level": context.user_data.get("ob_experience", "beginner"),
         "injuries": list(context.user_data.get("ob_injuries", [])),
-        "home_equipment": equipment,
+        "home_equipment": EQUIP_DATA.get(equip_key, []),
+        "home_equipment_key": equip_key,
     }
     save_user_profile(update.effective_user.id, profile)
-
     await query.edit_message_text(
-        "✅ 了解了！以后每次训练前我会问你 7 个快速问题来定制方案。\n\n"
+        "✅ 了解了！以后每次训练前我会问你几个快速问题来定制方案。\n\n"
         "发送 /workout 开始今天的训练 💪"
     )
-    context.user_data.pop("onboarding", None)
+    return ConversationHandler.END
+
+
+# ─── /profile ─────────────────────────────────────────────────────────────────
+
+async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    data = get_or_create_user(user_id, "")
+    profile = data.get("profile", {})
+
+    exp = EXPERIENCE_LABELS.get(profile.get("experience_level", ""), "未设置")
+    injuries = "、".join(profile.get("injuries", [])) or "无"
+    equip_key = profile.get("home_equipment_key", "none")
+    equip = EQUIP_LABELS.get(equip_key, "未设置")
+
+    text = (
+        f"📋 *我的档案*\n\n"
+        f"💪 经验等级：{exp}\n"
+        f"🤕 伤病记录：{injuries}\n"
+        f"🏠 家庭器械：{equip}"
+    )
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("修改家庭器械", callback_data="profile_edit_equip")],
+    ])
+    await update.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
+    return ConversationHandler.END
+
+
+async def profile_edit_equip_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    await query.edit_message_text("选择你家里有的器械：", reply_markup=HOME_EQUIP_KB)
+    return PROFILE_EDIT_EQUIP
+
+
+async def profile_edit_equip_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    equip_key = query.data.split("_", 1)[1]
+    update_user_profile_field(update.effective_user.id, "home_equipment", EQUIP_DATA.get(equip_key, []))
+    update_user_profile_field(update.effective_user.id, "home_equipment_key", equip_key)
+    await query.edit_message_text(f"✅ 已更新！家庭器械：{EQUIP_LABELS.get(equip_key, equip_key)}")
     return ConversationHandler.END
 
 
@@ -279,10 +323,8 @@ async def got_energy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     context.user_data["energy"] = int(query.data.split("_")[1])
-    await query.edit_message_text(
-        f"精力：{'⭐' * context.user_data['energy']}{'☆' * (5 - context.user_data['energy'])}\n\n今天有多少时间？",
-        reply_markup=TIME_KB,
-    )
+    stars = "⭐" * context.user_data["energy"] + "☆" * (5 - context.user_data["energy"])
+    await query.edit_message_text(f"精力：{stars}\n\n今天有多少时间？", reply_markup=TIME_KB)
     return ASK_TIME
 
 
@@ -304,11 +346,21 @@ async def got_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["location"] = location
 
     if location == "home":
-        await query.edit_message_text("家里有什么器械？", reply_markup=HOME_EQUIP_KB)
-        return ASK_HOME_EQUIP
+        # Check if equipment is already set in profile
+        user_id = update.effective_user.id
+        data = get_or_create_user(user_id, "")
+        profile_equip = data.get("profile", {}).get("home_equipment")
+        if profile_equip is not None:
+            # Already known — skip the question
+            context.user_data["home_equipment"] = profile_equip
+            await query.edit_message_text("今天心情怎么样？", reply_markup=MENTAL_KB)
+            return ASK_MENTAL
+        else:
+            await query.edit_message_text("家里有什么器械？", reply_markup=HOME_EQUIP_KB)
+            return ASK_HOME_EQUIP
     else:
         context.user_data["home_equipment"] = []
-        await query.edit_message_text("心情状态？", reply_markup=MENTAL_KB)
+        await query.edit_message_text("今天心情怎么样？", reply_markup=MENTAL_KB)
         return ASK_MENTAL
 
 
@@ -316,14 +368,11 @@ async def got_home_equip(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     equip_key = query.data.split("_", 1)[1]
-    equip_map = {
-        "none": [],
-        "dumbbell": ["dumbbell"],
-        "band": ["resistance_band"],
-        "both": ["dumbbell", "resistance_band"],
-    }
-    context.user_data["home_equipment"] = equip_map.get(equip_key, [])
-    await query.edit_message_text("心情状态？", reply_markup=MENTAL_KB)
+    context.user_data["home_equipment"] = EQUIP_DATA.get(equip_key, [])
+    # Save to profile so we don't ask again
+    update_user_profile_field(update.effective_user.id, "home_equipment", context.user_data["home_equipment"])
+    update_user_profile_field(update.effective_user.id, "home_equipment_key", equip_key)
+    await query.edit_message_text("今天心情怎么样？", reply_markup=MENTAL_KB)
     return ASK_MENTAL
 
 
@@ -331,7 +380,6 @@ async def got_mental(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     context.user_data["mental"] = query.data.split("_")[1]
-
     context.user_data["sore_parts"] = set()
     await query.edit_message_text(
         "身体有哪里不舒服？（可多选，没有就直接按确认）",
@@ -356,10 +404,7 @@ async def toggle_body_part(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def body_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    await query.edit_message_text(
-        "今天想练哪里？",
-        reply_markup=TARGET_KB,
-    )
+    await query.edit_message_text("今天想练哪里？", reply_markup=TARGET_KB)
     return ASK_TARGET
 
 
@@ -369,8 +414,9 @@ async def got_target(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["target"] = query.data.split("_", 1)[1]
 
     loc_names = {"home": "家里", "gym": "健身房", "office": "公司", "outdoor": "户外"}
-    loc = loc_names.get(context.user_data.get("location", ""), "")
-    await query.edit_message_text(f"📍 {loc}  正在生成方案... ⏳")
+    await query.edit_message_text(
+        f"📍 {loc_names.get(context.user_data.get('location', ''), '')}  正在生成方案... ⏳"
+    )
 
     user_id = update.effective_user.id
     pre_survey = {
@@ -395,19 +441,28 @@ async def got_target(update: Update, context: ContextTypes.DEFAULT_TYPE):
         session_id = save_session(user_id, pre_survey, decision, plan)
         context.user_data["session_id"] = session_id
 
-        plan_text = format_plan(decision, plan)
-
-        done_kb = InlineKeyboardMarkup([[
-            InlineKeyboardButton("✅ 练完了，记录反馈", callback_data="fb_start"),
-            InlineKeyboardButton("❌ 跳过", callback_data="fb_skip"),
-        ]])
-        await query.message.reply_text(plan_text, parse_mode="Markdown", reply_markup=done_kb)
+        plan_text, plan_kb = format_plan(decision, plan, session_id)
+        await query.message.reply_text(plan_text, parse_mode="Markdown", reply_markup=plan_kb)
 
     except Exception as e:
         logger.error("generate_plan failed: %s", e)
         await query.message.reply_text("生成方案时遇到问题，请稍后重试 /workout")
 
     return ConversationHandler.END
+
+
+# ─── Exercise details ─────────────────────────────────────────────────────────
+
+async def show_exercise_details(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    session_id = int(query.data.split("_", 1)[1])
+    plan = get_session_plan(session_id)
+    if not plan:
+        await query.answer("找不到方案数据", show_alert=True)
+        return
+    details = format_exercise_details(plan)
+    await query.message.reply_text(details, parse_mode="Markdown")
 
 
 # ─── Feedback ─────────────────────────────────────────────────────────────────
@@ -423,7 +478,7 @@ async def feedback_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def feedback_skip(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer("已跳过反馈")
+    await query.answer("已跳过")
     await query.edit_message_reply_markup(None)
     return ConversationHandler.END
 
@@ -450,7 +505,6 @@ async def got_fb_mood(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     summary = format_summary(feedback)
     await query.edit_message_text(summary, parse_mode="Markdown")
-
     context.user_data.pop("session_id", None)
     context.user_data.pop("feedback", None)
     return ConversationHandler.END
@@ -473,7 +527,22 @@ def build_onboarding_handler() -> ConversationHandler:
                 CallbackQueryHandler(ob_toggle_injury, pattern=r"^inj_(?!done)"),
                 CallbackQueryHandler(ob_injuries_done, pattern=r"^inj_done$"),
             ],
-            OB_EQUIPMENT: [CallbackQueryHandler(ob_got_equipment, pattern=r"^ob_equip_")],
+            OB_EQUIPMENT: [CallbackQueryHandler(ob_got_equipment, pattern=r"^equip_")],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+        per_user=True,
+        per_chat=True,
+    )
+
+
+def build_profile_handler() -> ConversationHandler:
+    return ConversationHandler(
+        entry_points=[
+            CommandHandler("profile", profile_command),
+            CallbackQueryHandler(profile_edit_equip_start, pattern=r"^profile_edit_equip$"),
+        ],
+        states={
+            PROFILE_EDIT_EQUIP: [CallbackQueryHandler(profile_edit_equip_save, pattern=r"^equip_")],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
         per_user=True,
@@ -488,7 +557,7 @@ def build_workout_handler() -> ConversationHandler:
             ASK_ENERGY: [CallbackQueryHandler(got_energy, pattern=r"^energy_\d$")],
             ASK_TIME: [CallbackQueryHandler(got_time, pattern=r"^time_\d+$")],
             ASK_LOCATION: [CallbackQueryHandler(got_location, pattern=r"^loc_\w+$")],
-            ASK_HOME_EQUIP: [CallbackQueryHandler(got_home_equip, pattern=r"^equip_\w+$")],
+            ASK_HOME_EQUIP: [CallbackQueryHandler(got_home_equip, pattern=r"^equip_")],
             ASK_MENTAL: [CallbackQueryHandler(got_mental, pattern=r"^mental_\w+$")],
             ASK_BODY: [
                 CallbackQueryHandler(toggle_body_part, pattern=r"^body_(?!done)"),
