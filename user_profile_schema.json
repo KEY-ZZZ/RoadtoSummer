@@ -1,0 +1,183 @@
+{
+  "user_profile": {
+
+    "basic_info": {
+      "user_id": "uuid",
+      "created_at": "2026-04-21T10:00:00Z",
+      "updated_at": "2026-04-21T10:00:00Z",
+
+      "age_range": "25-30",
+      "gender": "male | female | other | prefer_not_to_say",
+      "height_cm": 175,
+      "weight_kg": 70
+    },
+
+    "fitness_background": {
+      "experience_level": "beginner | intermediate | advanced",
+      "exercise_frequency_per_week": 3,
+      "preferred_exercise_types": ["strength", "cardio", "yoga", "stretching", "hiit"],
+      "available_equipment": ["none", "resistance_band", "dumbbell", "pull_up_bar", "mat"],
+      "typical_available_time_min": 30,
+      "preferred_time_of_day": "morning | afternoon | evening | flexible"
+    },
+
+    "body_preferences": {
+      "focus_areas": ["upper_body", "lower_body", "core", "full_body", "flexibility"],
+      "known_injuries_or_restrictions": [
+        {
+          "body_part": "lower_back",
+          "restriction_type": "avoid_heavy_load | avoid_flexion | low_impact_only",
+          "severity": "mild | moderate | severe"
+        }
+      ],
+      "disliked_exercise_types": ["jumping", "burpees"]
+    },
+
+    "loose_goals": {
+      "primary_direction": "maintain_fitness | improve_endurance | build_strength | lose_weight | reduce_stress | improve_flexibility",
+      "is_goal_strict": false,
+      "note": "目标作为后台参考变量，不作为前台主线展示"
+    }
+  },
+
+  "session_record": {
+    "session_id": "uuid",
+    "user_id": "uuid",
+    "created_at": "2026-04-21T20:00:00Z",
+
+    "pre_survey": {
+      "survey_mode": "quick | deep",
+
+      "overall_energy": {
+        "score": 3,
+        "scale": "1-5",
+        "label": "1=极度疲惫 3=一般 5=精力充沛"
+      },
+
+      "body_part_status": [
+        {
+          "part": "lower_back",
+          "status": "sore | tight | fine | energized",
+          "note": "久坐后有些酸"
+        },
+        {
+          "part": "legs",
+          "status": "fine"
+        },
+        {
+          "part": "shoulders",
+          "status": "tight"
+        }
+      ],
+
+      "mental_state": "stressed | neutral | relaxed | motivated",
+
+      "available_time_min": 20,
+
+      "current_scene": {
+        "location": "home | gym | office | outdoor | hotel",
+        "equipment_available": ["mat", "resistance_band"],
+        "space": "limited | moderate | open"
+      },
+
+      "special_notes": "今天睡眠不太好，想轻松动一动"
+    },
+
+    "decision": {
+      "intensity": "very_low | low | moderate | high | very_high",
+      "target_body_parts": ["upper_body", "core"],
+      "contraindicated": ["heavy_spinal_load", "high_impact_jumping"],
+      "duration_min": 15,
+      "exercise_style": ["activation", "mobility", "stretching"],
+      "reasoning_summary": "用户精力偏低且腰背酸胀，适合低强度上肢激活和拉伸，避免躯干大幅屈伸动作"
+    },
+
+    "matched_plan": {
+      "plan_id": "uuid",
+      "exercises": [
+        {
+          "exercise_id": "ex_001",
+          "name": "肩绕环",
+          "sets": 2,
+          "reps": 10,
+          "duration_sec": null,
+          "rest_sec": 30
+        },
+        {
+          "exercise_id": "ex_002",
+          "name": "猫牛式",
+          "sets": null,
+          "reps": null,
+          "duration_sec": 60,
+          "rest_sec": 15
+        }
+      ],
+      "total_duration_min": 15
+    },
+
+    "post_feedback": {
+      "completed": true,
+      "completion_rate": 1.0,
+
+      "perceived_intensity": {
+        "score": 2,
+        "scale": "1-5",
+        "label": "1=太轻松 3=刚好 5=太累"
+      },
+
+      "body_response": "feel_better | feel_same | feel_worse | feel_tired",
+      "mood_after": "refreshed | calm | neutral | tired | energized",
+      "discomfort_reported": false,
+      "discomfort_detail": null,
+
+      "user_comment": "动完感觉腰松了很多，强度刚好"
+    },
+
+    "label": {
+      "decision_quality": "good | acceptable | poor",
+      "labeled_by": "expert | user_feedback | auto",
+      "label_note": "状态与决策匹配合理，腰背酸胀下避开了屈伸动作"
+    }
+  },
+
+  "user_memory": {
+    "user_id": "uuid",
+    "last_updated": "2026-04-21T20:30:00Z",
+
+    "historical_patterns": {
+      "avg_energy_by_time": {
+        "morning": 3.8,
+        "afternoon": 3.2,
+        "evening": 2.9
+      },
+      "frequent_discomfort_areas": ["lower_back", "shoulders"],
+      "preferred_exercise_styles": ["stretching", "yoga", "mobility"],
+      "avg_completion_rate": 0.87,
+      "sessions_total": 12
+    },
+
+    "response_patterns": [
+      {
+        "condition": "energy_score <= 2",
+        "observation": "用户在低精力状态下倾向于跳过跳跃类动作",
+        "confidence": "high"
+      },
+      {
+        "condition": "location = home AND time_available < 20",
+        "observation": "用户更偏好拉伸类方案，完成率更高",
+        "confidence": "medium"
+      }
+    ],
+
+    "session_history_summary": [
+      {
+        "session_id": "uuid",
+        "date": "2026-04-21",
+        "energy_before": 3,
+        "intensity_matched": "low",
+        "completion_rate": 1.0,
+        "mood_after": "refreshed"
+      }
+    ]
+  }
+}

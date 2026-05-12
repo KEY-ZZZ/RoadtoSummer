@@ -1,0 +1,148 @@
+{
+  "note": "本文件描述动作匹配的完整逻辑，从decision到最终方案的选择过程",
+
+  "step1_filter": {
+    "description": "硬过滤：根据decision排除不符合条件的动作",
+    "rules": [
+      {
+        "rule": "强度匹配",
+        "logic": "exercise.matching_tags.intensity 必须包含 decision.intensity"
+      },
+      {
+        "rule": "部位交集",
+        "logic": "exercise.matching_tags.target_body_parts 与 decision.target_body_parts 必须有交集"
+      },
+      {
+        "rule": "风格匹配",
+        "logic": "exercise.matching_tags.exercise_style 与 decision.exercise_style 必须有交集"
+      },
+      {
+        "rule": "禁忌排除（硬性）",
+        "logic": "exercise.matching_tags.contraindicated_flags 不能包含 decision.contraindicated 中的任何项",
+        "priority": "最高，不可绕过"
+      },
+      {
+        "rule": "时长控制",
+        "logic": "候选动作的 estimated_duration_min 总和 <= decision.duration_min"
+      }
+    ],
+    "output": "候选动作池（可能有多个）"
+  },
+
+  "step2_score": {
+    "description": "软排序：对候选动作打分，结合用户历史偏好",
+    "scoring_dimensions": [
+
+      {
+        "dimension": "近期避重复",
+        "weight": 0.35,
+        "logic": "最近3次出现过的动作降分，避免每次都做同样的动作",
+        "data_source": "user_memory.session_history_summary[].exercises"
+      },
+
+      {
+        "dimension": "完成率偏好",
+        "weight": 0.25,
+        "logic": "该用户历史上该类动作完成率高的加分",
+        "data_source": "user_exercise_stats.completion_rate_by_style"
+      },
+
+      {
+        "dimension": "反馈偏好",
+        "weight": 0.25,
+        "logic": "用户对该动作类型过去反馈 feel_better 的加分，feel_worse 的降分",
+        "data_source": "user_exercise_stats.feedback_by_exercise_id"
+      },
+
+      {
+        "dimension": "渐进性",
+        "weight": 0.15,
+        "logic": "如果用户已多次完成某动作且反馈良好，可升级到更高难度版本",
+        "data_source": "user_exercise_stats.proficiency_by_exercise_id"
+      }
+    ],
+    "output": "带分数的候选动作排序列表"
+  },
+
+  "step3_assemble": {
+    "description": "组合成完整训练方案",
+    "rules": [
+      "优先选高分动作",
+      "保证动作类型多样性（不全是拉伸，不全是力量）",
+      "总时长控制在 decision.duration_min ± 5min 以内",
+      "动作顺序：热身激活 → 主体训练 → 拉伸放松"
+    ]
+  },
+
+  "user_exercise_stats": {
+    "note": "每个用户独立维护，随会话积累自动更新",
+    "user_id": "uuid",
+
+    "completion_rate_by_style": {
+      "strength": 0.85,
+      "stretching": 0.95,
+      "cardio": 0.70,
+      "activation": 0.90,
+      "mobility": 0.88
+    },
+
+    "feedback_by_exercise_id": {
+      "gym_001": {
+        "times_done": 4,
+        "avg_perceived_intensity": 3.5,
+        "feel_better_rate": 0.75,
+        "feel_worse_rate": 0.0,
+        "last_done": "2026-04-18"
+      },
+      "gym_010": {
+        "times_done": 6,
+        "avg_perceived_intensity": 2.0,
+        "feel_better_rate": 1.0,
+        "feel_worse_rate": 0.0,
+        "last_done": "2026-04-20"
+      }
+    },
+
+    "proficiency_by_exercise_id": {
+      "gym_001": "beginner",
+      "gym_010": "intermediate"
+    },
+
+    "recently_used": [
+      {"exercise_id": "gym_010", "date": "2026-04-20"},
+      {"exercise_id": "gym_009", "date": "2026-04-20"},
+      {"exercise_id": "gym_001", "date": "2026-04-18"}
+    ],
+
+    "blacklist": ["gym_006"],
+    "note_blacklist": "用户反馈深蹲后膝盖不适，暂时排除"
+  },
+
+  "example": {
+    "scenario": "两个用户状态完全相同，验证个性化差异",
+
+    "shared_decision": {
+      "intensity": "low",
+      "target_body_parts": ["shoulders", "back"],
+      "contraindicated": [],
+      "exercise_style": ["strength", "activation"],
+      "duration_min": 20
+    },
+
+    "user_A": {
+      "profile": "新用户，无历史数据",
+      "filter_result": ["gym_002", "gym_004", "gym_013", "gym_014"],
+      "scoring": "无历史数据，随机选取高分",
+      "final_plan": ["gym_013（肩部热身）", "gym_002（高位下拉）", "gym_004（绳索面拉）"]
+    },
+
+    "user_B": {
+      "profile": "gym_002最近3次都做过，gym_004反馈feel_better率100%",
+      "filter_result": ["gym_002", "gym_004", "gym_013", "gym_014"],
+      "scoring": "gym_002因近期重复降分，gym_004因高反馈加分",
+      "final_plan": ["gym_013（肩部热身）", "gym_014（哑铃侧平举）", "gym_004（绳索面拉）"]
+    },
+
+    "conclusion": "相同decision，因历史数据不同，User B用gym_014替换了gym_002"
+  }
+}

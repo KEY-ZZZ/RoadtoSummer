@@ -1,0 +1,114 @@
+{
+"decision": "modify",
+"session_type": "upper_body_recovery",
+"location": "gym",
+"duration": "short",
+"intensity": "low",
+"volume": "low",
+"load": "light",
+"risk_level": "medium",
+"primary_goal": "upper_body",
+"secondary_goal": "fatigue_management",
+"warmup_required": "yes",
+"recommended_training": [
+"machine_chest_press",
+"seated_cable_row",
+"lat_pulldown",
+"machine_shoulder_press_light",
+"cable_face_pull",
+"easy_walk"
+],
+"avoid_training": [
+"barbell_row",
+"deadlift",
+"standing_overhead_press",
+"heavy_free_weight",
+"spinal_loading",
+"high_intensity_interval"
+],
+"pain_rule": "stop_if_pain_increases",
+"coach_note": "lower_back_sore_low_energy_choose_supported_upper_body_machines"
+}
+
+
+{
+"decision": "modified_training",
+"readiness": "low",
+"risk_level": "moderate",
+"location": "gym",
+"duration": "20_min",
+"primary_goal": "upper_body",
+"session_type": "low_back_friendly_upper_body",
+"intensity": "low_to_moderate",
+"volume": "low",
+"progression": "none",
+"warm_up": {
+"duration": "5_min",
+"mode": "mobility_activation",
+"items": [
+"cat_cow",
+"thoracic_rotation",
+"band_pull_apart",
+"scapular_push_up"
+]
+},
+"main_training": {
+"duration": "12_min",
+"structure": "controlled_sets",
+"exercises": [
+{
+"name": "seated_machine_chest_press",
+"sets": "2_sets",
+"reps": "8_to_12_reps",
+"effort": "rpe_6",
+"rest": "60_sec"
+},
+{
+"name": "chest_supported_row",
+"sets": "2_sets",
+"reps": "8_to_12_reps",
+"effort": "rpe_6",
+"rest": "60_sec"
+},
+{
+"name": "seated_cable_face_pull",
+"sets": "2_sets",
+"reps": "12_to_15_reps",
+"effort": "rpe_6",
+"rest": "45_sec"
+},
+{
+"name": "seated_machine_lateral_raise",
+"sets": "1_to_2_sets",
+"reps": "12_to_15_reps",
+"effort": "rpe_5_to_6",
+"rest": "45_sec"
+}
+]
+},
+"cool_down": {
+"duration": "3_min",
+"mode": "breathing_mobility",
+"items": [
+"diaphragmatic_breathing",
+"child_pose",
+"lat_stretch"
+]
+},
+"avoid": [
+"heavy_axial_loading",
+"barbell_deadlift",
+"barbell_squat",
+"standing_overhead_press",
+"bent_over_row",
+"max_effort_sets"
+],
+"pain_rule": "stop_if_pain_worsens",
+"recovery_priority": "high",
+"notes": [
+"maintain_neutral_spine",
+"use_supported_positions",
+"keep_breathing_controlled",
+"no_weight_increase_today"
+]
+}

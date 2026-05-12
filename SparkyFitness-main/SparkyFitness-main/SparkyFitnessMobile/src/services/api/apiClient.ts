@@ -1,0 +1,63 @@
+import { getActiveServerConfig, proxyHeadersToRecord } from '../storage';
+import { addLog } from '../LogService';
+import { getAuthHeaders, notifySessionExpired } from './authService';
+
+export const normalizeUrl = (url: string): string => {
+  return url.endsWith('/') ? url.slice(0, -1) : url;
+};
+
+interface ApiFetchOptions {
+  endpoint: string;
+  serviceName: string;
+  operation: string;
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  body?: unknown;
+  headers?: Record<string, string>;
+}
+
+export async function apiFetch<T>(options: ApiFetchOptions): Promise<T> {
+  const { endpoint, serviceName, operation, method = 'GET', body, headers: customHeaders } = options;
+
+  const config = await getActiveServerConfig();
+  if (!config) {
+    throw new Error('Server configuration not found.');
+  }
+
+  const baseUrl = normalizeUrl(config.url);
+
+  if (!__DEV__ && baseUrl.toLowerCase().startsWith('http://')) {
+    throw new Error('HTTPS is required for server connections. Please update your server URL in Settings.');
+  }
+
+  try {
+    const response = await fetch(`${baseUrl}${endpoint}`, {
+      method,
+      headers: {
+        ...proxyHeadersToRecord(config.proxyHeaders),
+        ...getAuthHeaders(config),
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...customHeaders,
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 && config.authType === 'session') {
+        notifySessionExpired(config.id);
+      }
+      const errorText = await response.text();
+      addLog(`[${serviceName}] Failed to ${operation}: ${response.status}`, 'ERROR', [errorText]);
+      throw new Error(`Server error: ${response.status} - ${errorText}`);
+    }
+
+    if (response.status === 204 || response.headers?.get('content-length') === '0') {
+      return undefined as T;
+    }
+
+    return await response.json();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    addLog(`[${serviceName}] Failed to ${operation}: ${message}`, 'ERROR');
+    throw error;
+  }
+}

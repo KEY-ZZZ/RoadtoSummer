@@ -1,0 +1,25 @@
+# Use an official Node.js runtime as a parent image
+FROM node:22-alpine
+
+RUN corepack enable
+
+WORKDIR /app
+
+# Copy workspace root files for pnpm resolution
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy all workspace member package.json files for dependency graph resolution
+COPY SparkyFitnessServer/package.json SparkyFitnessServer/
+COPY SparkyFitnessFrontend/package.json SparkyFitnessFrontend/
+COPY SparkyFitnessMobile/package.json SparkyFitnessMobile/
+COPY shared/package.json shared/
+
+# Install workspace dependencies
+RUN pnpm install
+
+COPY shared/ shared/
+COPY SparkyFitnessServer/ SparkyFitnessServer/
+# Set working directory to server for runtime
+WORKDIR /app/SparkyFitnessServer
+
+# The container will be run using the command from docker-compose, so no CMD is needed here.

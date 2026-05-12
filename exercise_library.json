@@ -1,0 +1,504 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "scene": "gym",
+    "total_exercises": 15,
+    "last_updated": "2026-04-21"
+  },
+
+  "tag_taxonomy": {
+    "note": "动作库所有tag必须从以下枚举中取值，与模型decision输出严格对齐",
+
+    "intensity": ["very_low", "low", "moderate", "high", "very_high"],
+
+    "target_body_parts": [
+      "chest", "back", "shoulders", "biceps", "triceps",
+      "core", "glutes", "quads", "hamstrings", "calves", "full_body"
+    ],
+
+    "exercise_style": [
+      "strength", "hypertrophy", "endurance",
+      "activation", "mobility", "stretching", "cardio", "hiit"
+    ],
+
+    "contraindicated_flags": [
+      "shoulder_impingement_risk",
+      "lower_back_load",
+      "knee_stress",
+      "wrist_pressure",
+      "neck_strain",
+      "spinal_flexion",
+      "heavy_axial_load",
+      "high_impact"
+    ],
+
+    "equipment": [
+      "barbell", "dumbbell", "cable_machine", "smith_machine",
+      "resistance_band", "pull_up_bar", "bench", "leg_press_machine",
+      "lat_pulldown_machine", "rowing_machine", "treadmill",
+      "elliptical", "mat", "bodyweight"
+    ]
+  },
+
+  "exercises": [
+
+    {
+      "exercise_id": "gym_001",
+      "name": "哑铃卧推",
+      "name_en": "Dumbbell Bench Press",
+
+      "matching_tags": {
+        "intensity": ["moderate", "high"],
+        "target_body_parts": ["chest", "shoulders", "triceps"],
+        "exercise_style": ["strength", "hypertrophy"],
+        "contraindicated_flags": ["shoulder_impingement_risk", "wrist_pressure"]
+      },
+
+      "execution": {
+        "equipment": ["dumbbell", "bench"],
+        "sets_range": [3, 5],
+        "reps_range": [8, 12],
+        "rest_sec": 90,
+        "estimated_duration_min": 12
+      },
+
+      "muscles": {
+        "primary": ["pectoralis_major"],
+        "secondary": ["anterior_deltoid", "triceps_brachii"]
+      },
+
+      "difficulty": "beginner",
+      "instructions": "平躺于训练凳，哑铃置于胸侧，推起至手臂伸直，缓慢下降。",
+      "cues": ["保持肩胛骨收紧", "下放时肘部不超过90度", "呼气推起"]
+    },
+
+    {
+      "exercise_id": "gym_002",
+      "name": "高位下拉",
+      "name_en": "Lat Pulldown",
+
+      "matching_tags": {
+        "intensity": ["low", "moderate"],
+        "target_body_parts": ["back", "biceps"],
+        "exercise_style": ["strength", "hypertrophy"],
+        "contraindicated_flags": ["shoulder_impingement_risk"]
+      },
+
+      "execution": {
+        "equipment": ["lat_pulldown_machine"],
+        "sets_range": [3, 4],
+        "reps_range": [10, 15],
+        "rest_sec": 75,
+        "estimated_duration_min": 10
+      },
+
+      "muscles": {
+        "primary": ["latissimus_dorsi"],
+        "secondary": ["biceps_brachii", "rear_deltoid", "rhomboids"]
+      },
+
+      "difficulty": "beginner",
+      "instructions": "坐于高位下拉机，双手握距略宽于肩，将横杆下拉至锁骨位置，缓慢还原。",
+      "cues": ["下拉时想象用肘部带动", "不要耸肩", "躯干保持稳定微后倾"]
+    },
+
+    {
+      "exercise_id": "gym_003",
+      "name": "腿举",
+      "name_en": "Leg Press",
+
+      "matching_tags": {
+        "intensity": ["moderate", "high"],
+        "target_body_parts": ["quads", "glutes", "hamstrings"],
+        "exercise_style": ["strength", "hypertrophy"],
+        "contraindicated_flags": ["knee_stress", "lower_back_load"]
+      },
+
+      "execution": {
+        "equipment": ["leg_press_machine"],
+        "sets_range": [3, 4],
+        "reps_range": [10, 15],
+        "rest_sec": 90,
+        "estimated_duration_min": 12
+      },
+
+      "muscles": {
+        "primary": ["quadriceps", "gluteus_maximus"],
+        "secondary": ["hamstrings", "calves"]
+      },
+
+      "difficulty": "beginner",
+      "instructions": "坐于腿举机，脚踩踏板与肩同宽，推起后缓慢弯曲膝盖至90度，不要锁死膝关节。",
+      "cues": ["膝盖方向与脚尖一致", "下放不超过膝关节90度", "腰背贴紧靠垫"]
+    },
+
+    {
+      "exercise_id": "gym_004",
+      "name": "绳索面拉",
+      "name_en": "Cable Face Pull",
+
+      "matching_tags": {
+        "intensity": ["very_low", "low"],
+        "target_body_parts": ["shoulders", "back"],
+        "exercise_style": ["activation", "strength"],
+        "contraindicated_flags": []
+      },
+
+      "execution": {
+        "equipment": ["cable_machine"],
+        "sets_range": [3, 4],
+        "reps_range": [12, 20],
+        "rest_sec": 60,
+        "estimated_duration_min": 8
+      },
+
+      "muscles": {
+        "primary": ["rear_deltoid", "rotator_cuff"],
+        "secondary": ["rhomboids", "middle_trapezius"]
+      },
+
+      "difficulty": "beginner",
+      "instructions": "将绳索调至与脸同高，双手握绳，将绳向脸部拉近，肘部向两侧展开，停留后缓慢还原。",
+      "cues": ["肘部高于手腕", "外旋肩膀", "保持核心收紧"],
+      "note": "适合肩部热身或康复训练，无明显禁忌"
+    },
+
+    {
+      "exercise_id": "gym_005",
+      "name": "哑铃弯举",
+      "name_en": "Dumbbell Bicep Curl",
+
+      "matching_tags": {
+        "intensity": ["low", "moderate"],
+        "target_body_parts": ["biceps"],
+        "exercise_style": ["strength", "hypertrophy"],
+        "contraindicated_flags": ["wrist_pressure"]
+      },
+
+      "execution": {
+        "equipment": ["dumbbell"],
+        "sets_range": [3, 4],
+        "reps_range": [10, 15],
+        "rest_sec": 60,
+        "estimated_duration_min": 8
+      },
+
+      "muscles": {
+        "primary": ["biceps_brachii"],
+        "secondary": ["brachialis", "brachioradialis"]
+      },
+
+      "difficulty": "beginner",
+      "instructions": "站立持哑铃，上臂固定于体侧，屈肘将哑铃卷至肩部，缓慢下降。",
+      "cues": ["不要借助躯干摆动", "全程控制速度", "顶部短暂停留"]
+    },
+
+    {
+      "exercise_id": "gym_006",
+      "name": "深蹲",
+      "name_en": "Barbell Back Squat",
+
+      "matching_tags": {
+        "intensity": ["high", "very_high"],
+        "target_body_parts": ["quads", "glutes", "hamstrings", "core"],
+        "exercise_style": ["strength", "hypertrophy"],
+        "contraindicated_flags": [
+          "knee_stress", "lower_back_load", "heavy_axial_load"
+        ]
+      },
+
+      "execution": {
+        "equipment": ["barbell", "bench"],
+        "sets_range": [4, 5],
+        "reps_range": [5, 8],
+        "rest_sec": 180,
+        "estimated_duration_min": 20
+      },
+
+      "muscles": {
+        "primary": ["quadriceps", "gluteus_maximus"],
+        "secondary": ["hamstrings", "erector_spinae", "core"]
+      },
+
+      "difficulty": "intermediate",
+      "instructions": "杠铃置于斜方肌上，深蹲至大腿平行于地面或以下，保持脊柱中立位。",
+      "cues": ["膝盖追随脚尖", "挺胸收腹", "核心全程收紧", "脚跟踩地"]
+    },
+
+    {
+      "exercise_id": "gym_007",
+      "name": "绳索三头下压",
+      "name_en": "Cable Tricep Pushdown",
+
+      "matching_tags": {
+        "intensity": ["low", "moderate"],
+        "target_body_parts": ["triceps"],
+        "exercise_style": ["strength", "hypertrophy"],
+        "contraindicated_flags": ["wrist_pressure", "shoulder_impingement_risk"]
+      },
+
+      "execution": {
+        "equipment": ["cable_machine"],
+        "sets_range": [3, 4],
+        "reps_range": [12, 15],
+        "rest_sec": 60,
+        "estimated_duration_min": 8
+      },
+
+      "muscles": {
+        "primary": ["triceps_brachii"],
+        "secondary": []
+      },
+
+      "difficulty": "beginner",
+      "instructions": "面对绳索机站立，握住绳索，上臂固定，将绳索向下压至手臂伸直，缓慢还原。",
+      "cues": ["上臂夹紧身体", "顶部充分伸展", "不要弓腰借力"]
+    },
+
+    {
+      "exercise_id": "gym_008",
+      "name": "坐姿划船",
+      "name_en": "Seated Cable Row",
+
+      "matching_tags": {
+        "intensity": ["moderate"],
+        "target_body_parts": ["back", "biceps"],
+        "exercise_style": ["strength", "hypertrophy"],
+        "contraindicated_flags": ["lower_back_load"]
+      },
+
+      "execution": {
+        "equipment": ["cable_machine", "bench"],
+        "sets_range": [3, 4],
+        "reps_range": [10, 12],
+        "rest_sec": 75,
+        "estimated_duration_min": 10
+      },
+
+      "muscles": {
+        "primary": ["latissimus_dorsi", "rhomboids"],
+        "secondary": ["biceps_brachii", "rear_deltoid"]
+      },
+
+      "difficulty": "beginner",
+      "instructions": "坐于划船器，保持躯干直立，将把手拉向腹部，肩胛骨内收，缓慢还原。",
+      "cues": ["躯干不要过度后仰", "肘部贴紧身体", "感受背部收缩"]
+    },
+
+    {
+      "exercise_id": "gym_009",
+      "name": "平板支撑",
+      "name_en": "Plank",
+
+      "matching_tags": {
+        "intensity": ["very_low", "low"],
+        "target_body_parts": ["core", "shoulders"],
+        "exercise_style": ["activation", "endurance"],
+        "contraindicated_flags": ["wrist_pressure", "shoulder_impingement_risk"]
+      },
+
+      "execution": {
+        "equipment": ["mat", "bodyweight"],
+        "sets_range": [3, 4],
+        "reps_range": null,
+        "duration_range_sec": [30, 60],
+        "rest_sec": 45,
+        "estimated_duration_min": 6
+      },
+
+      "muscles": {
+        "primary": ["transverse_abdominis", "rectus_abdominis"],
+        "secondary": ["anterior_deltoid", "glutes", "quads"]
+      },
+
+      "difficulty": "beginner",
+      "instructions": "俯卧以前臂和脚尖支撑，保持身体成一条直线，核心收紧。",
+      "cues": ["不要塌腰或顶臀", "呼吸均匀", "眼睛看地面"]
+    },
+
+    {
+      "exercise_id": "gym_010",
+      "name": "椭圆机有氧",
+      "name_en": "Elliptical Cardio",
+
+      "matching_tags": {
+        "intensity": ["very_low", "low", "moderate"],
+        "target_body_parts": ["full_body", "quads", "glutes"],
+        "exercise_style": ["cardio", "endurance"],
+        "contraindicated_flags": []
+      },
+
+      "execution": {
+        "equipment": ["elliptical"],
+        "sets_range": null,
+        "reps_range": null,
+        "duration_range_min": [10, 30],
+        "rest_sec": 0,
+        "estimated_duration_min": 20
+      },
+
+      "muscles": {
+        "primary": ["quads", "glutes", "hamstrings"],
+        "secondary": ["calves", "core", "upper_body"]
+      },
+
+      "difficulty": "beginner",
+      "instructions": "步伐均匀，保持直立姿势，可调节阻力控制强度。",
+      "cues": ["低冲击，关节友好", "适合热身或恢复训练", "保持心率在目标区间"],
+      "note": "无明显禁忌，适合低精力或受伤恢复期"
+    },
+
+    {
+      "exercise_id": "gym_011",
+      "name": "胸部拉伸（绳索）",
+      "name_en": "Cable Chest Stretch",
+
+      "matching_tags": {
+        "intensity": ["very_low"],
+        "target_body_parts": ["chest", "shoulders"],
+        "exercise_style": ["stretching", "mobility"],
+        "contraindicated_flags": []
+      },
+
+      "execution": {
+        "equipment": ["cable_machine"],
+        "sets_range": [2, 3],
+        "reps_range": null,
+        "duration_range_sec": [20, 40],
+        "rest_sec": 30,
+        "estimated_duration_min": 5
+      },
+
+      "muscles": {
+        "primary": ["pectoralis_major", "anterior_deltoid"],
+        "secondary": []
+      },
+
+      "difficulty": "beginner",
+      "instructions": "站于绳索机侧面，单手握绳，躯干旋转带动胸部拉伸，保持不动。",
+      "cues": ["感受胸部深层拉伸", "不要弹振", "配合深呼吸"]
+    },
+
+    {
+      "exercise_id": "gym_012",
+      "name": "髋屈肌拉伸",
+      "name_en": "Hip Flexor Stretch",
+
+      "matching_tags": {
+        "intensity": ["very_low"],
+        "target_body_parts": ["quads", "glutes"],
+        "exercise_style": ["stretching", "mobility"],
+        "contraindicated_flags": ["knee_stress"]
+      },
+
+      "execution": {
+        "equipment": ["mat", "bodyweight"],
+        "sets_range": [2, 3],
+        "reps_range": null,
+        "duration_range_sec": [30, 60],
+        "rest_sec": 20,
+        "estimated_duration_min": 5
+      },
+
+      "muscles": {
+        "primary": ["iliopsoas", "rectus_femoris"],
+        "secondary": []
+      },
+
+      "difficulty": "beginner",
+      "instructions": "单腿跪地，后腿膝盖着地，前腿弯曲90度，躯干直立向前推髋。",
+      "cues": ["保持躯干直立", "感受后腿髋部前侧拉伸", "适合久坐后使用"]
+    },
+
+    {
+      "exercise_id": "gym_013",
+      "name": "肩部绕环热身",
+      "name_en": "Shoulder Circles Warm-up",
+
+      "matching_tags": {
+        "intensity": ["very_low"],
+        "target_body_parts": ["shoulders"],
+        "exercise_style": ["activation", "mobility"],
+        "contraindicated_flags": []
+      },
+
+      "execution": {
+        "equipment": ["bodyweight"],
+        "sets_range": [2, 3],
+        "reps_range": [10, 15],
+        "rest_sec": 20,
+        "estimated_duration_min": 3
+      },
+
+      "muscles": {
+        "primary": ["rotator_cuff", "deltoid"],
+        "secondary": []
+      },
+
+      "difficulty": "beginner",
+      "instructions": "双臂放松，以肩关节为轴做前后绕环动作，逐渐增大幅度。",
+      "cues": ["动作缓慢", "感受关节活动", "适合训练前热身"]
+    },
+
+    {
+      "exercise_id": "gym_014",
+      "name": "哑铃侧平举",
+      "name_en": "Dumbbell Lateral Raise",
+
+      "matching_tags": {
+        "intensity": ["low", "moderate"],
+        "target_body_parts": ["shoulders"],
+        "exercise_style": ["strength", "hypertrophy"],
+        "contraindicated_flags": ["shoulder_impingement_risk"]
+      },
+
+      "execution": {
+        "equipment": ["dumbbell"],
+        "sets_range": [3, 4],
+        "reps_range": [12, 20],
+        "rest_sec": 60,
+        "estimated_duration_min": 8
+      },
+
+      "muscles": {
+        "primary": ["medial_deltoid"],
+        "secondary": ["supraspinatus"]
+      },
+
+      "difficulty": "beginner",
+      "instructions": "站立持小重量哑铃，双臂侧平举至肩部高度，缓慢下降。",
+      "cues": ["肘部微弯", "不要借助身体晃动", "控制下降速度"]
+    },
+
+    {
+      "exercise_id": "gym_015",
+      "name": "跑步机慢跑",
+      "name_en": "Treadmill Jog",
+
+      "matching_tags": {
+        "intensity": ["low", "moderate"],
+        "target_body_parts": ["full_body", "quads", "calves"],
+        "exercise_style": ["cardio", "endurance"],
+        "contraindicated_flags": ["knee_stress", "high_impact"]
+      },
+
+      "execution": {
+        "equipment": ["treadmill"],
+        "sets_range": null,
+        "reps_range": null,
+        "duration_range_min": [10, 30],
+        "rest_sec": 0,
+        "estimated_duration_min": 20
+      },
+
+      "muscles": {
+        "primary": ["quads", "calves", "glutes"],
+        "secondary": ["hamstrings", "core"]
+      },
+
+      "difficulty": "beginner",
+      "instructions": "设定适合自己的速度（慢跑建议6-8km/h），保持均匀呼吸，自然摆臂。",
+      "cues": ["落地轻柔", "保持直立姿势", "鼻呼吸为主"]
+    }
+  ]
+}
